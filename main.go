@@ -1,33 +1,30 @@
 package main
 
 import (
+    "os"
     "fmt"
     "net/http"
-
-    "github.com/julienschmidt/httprouter"
 )
 
 func main() {
-    fmt.Print("Serve on port: ")
-    port := ""
-    fmt.Scanln(&port)
-    if len(port) == 0 {
-        port = "3000"
+    port := "3000"
+    // First argument is port
+    if len(os.Args) > 1 {
+        port = os.Args[1]
+        fmt.Println("port", os.Args[1])
     }
 
-    fmt.Println("Serve from folder: ")
-    from := ""
-    fmt.Scanln(&from)
+    http.HandleFunc("/", newHandler)
 
-    router := NewRouter(from)
+    fmt.Println("Starting simple server on port", port)
 
-    fmt.Println("Serving on port ", port)
-    http.ListenAndServe("localhost:" + port, router)
+    http.ListenAndServe(":" + port, nil)
 }
 
-func NewRouter(from string) *httprouter.Router {
-    r := httprouter.New()
-    fmt.Println("Serving folder ", from)
-    r.ServeFiles("/*filepath", http.Dir(from))
-    return r
+func newHandler(w http.ResponseWriter, r *http.Request) {
+    dir, _ := os.Getwd()
+
+    path := r.URL.Path;
+
+    http.ServeFile(w, r, dir + path)
 }

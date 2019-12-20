@@ -8,23 +8,36 @@ import (
 
 func main() {
     port := "3000"
+    serveRoot := false
+
     // First argument is port
     if len(os.Args) > 1 {
         port = os.Args[1]
         fmt.Println("port", os.Args[1])
     }
 
-    http.HandleFunc("/", newHandler)
+    // Second argument allows for not appending path
+    // but always serving from the root
+    // Useful for developing SPAs with routers
+    if len(os.Args) > 2 {
+        serveRoot = os.Args[2] == "true" || os.Args[2] == "1"
+    }
+
+    http.HandleFunc("/", createHandler(serveRoot))
 
     fmt.Println("Starting simple server on port", port)
 
     http.ListenAndServe(":" + port, nil)
 }
 
-func newHandler(w http.ResponseWriter, r *http.Request) {
-    dir, _ := os.Getwd()
+func createHandler(serveRoot bool) func(http.ResponseWriter, *http.Request) {
+    return func(w http.ResponseWriter, r *http.Request) {
+        dir, _ := os.Getwd()
 
-    path := r.URL.Path;
+        if serveRoot == false {
+            dir += r.URL.Path
+        }
 
-    http.ServeFile(w, r, dir + path)
+        http.ServeFile(w, r, dir)
+    }
 }

@@ -34,7 +34,9 @@ func createHandler(serveRoot bool) func(http.ResponseWriter, *http.Request) {
     return func(w http.ResponseWriter, r *http.Request) {
         dir, _ := os.Getwd()
 
-        if serveRoot == false {
+        // Check if file exists
+        _, err := os.Stat(dir + r.URL.Path)
+        if serveRoot == false || err == nil {
             dir += r.URL.Path
         }
 
